@@ -1,9 +1,16 @@
-require 'pathname'
+require "pathname"
+require "snapshot_testing/serializer"
 
 module SnapshotTesting
   module Snapshot
     DIR = "__snapshots__".freeze
     TEMPLATE = "snapshots[%s] = <<~SNAP\n%s\nSNAP\n".freeze
+
+    @@serializers = [SnapshotTesting::Serializer.new]
+
+    def self.use(serializer)
+      @@serializers.unshift(serializer)
+    end
 
     def self.path(source)
       dirname = File.dirname(source)
@@ -21,9 +28,11 @@ module SnapshotTesting
       snapshots.transform_values(&:chomp)
     end
 
-    def self.dump(snapshot)
-      entries = snapshot.map do |name, value|
-        format(TEMPLATE, name.inspect, value)
+    def self.dump(values)
+      entries = values.map do |name, value|
+        serializer = @@serializers.find { |s| s.accepts?(value) }
+        snapshot = serializer.dump(value)
+        format(TEMPLATE, name.inspect, snapshot)
       end
 
       entries.join("\n")
