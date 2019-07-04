@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "snappy"
+require "snapshot_testing"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
