@@ -31,8 +31,8 @@ module SnapshotTesting
       end
 
       def matches?(actual)
-        @actual, @expected, matches = @recorder.record(@name, actual)
-        matches
+        @actual, @expected = @recorder.record(@name, actual)
+        @actual == @expected
       end
 
       def failure_message

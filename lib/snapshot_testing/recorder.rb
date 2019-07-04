@@ -18,14 +18,14 @@ module SnapshotTesting
       if snapshot.nil?
         @changes[key] = actual
         @counter[name] += 1
-        [actual, actual, true]
+        [actual, actual]
       elsif actual == snapshot
         @counter[name] += 1
-        [actual, snapshot, true]
+        [actual, snapshot]
       else
         @changes[key] = actual if @update
         @counter[name] += 1
-        [actual, @update ? actual : snapshot, @update]
+        [actual, @update ? actual : snapshot]
       end
     end
 
