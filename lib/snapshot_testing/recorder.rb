@@ -6,29 +6,31 @@ module SnapshotTesting
 
     def initialize(path, update: false)
       @path = path
+      @update = update
       @changes = {}
       @counter = Hash.new { |h, k| h[k] = 1 }
-      @update = update
     end
 
-    def get(name)
-      snapshots[key_for(name)]
-    end
+    def record(name, actual)
+      key = "#{name} #{@counter[name]}"
+      snapshot = snapshots[key]
 
-    def set(name, value)
-      @changes[key_for(name)] = value
-    end
-
-    def advance(name)
-      @counter[name] += 1
-    end
-
-    def recording?
-      @update
+      if snapshot.nil?
+        @changes[key] = actual
+        @counter[name] += 1
+        [actual, actual, true]
+      elsif actual == snapshot
+        @counter[name] += 1
+        [actual, snapshot, true]
+      else
+        @changes[key] = actual if @update
+        @counter[name] += 1
+        [actual, @update ? actual : snapshot, @update]
+      end
     end
 
     def commit
-      if recording? && !@changes.empty?
+      unless @changes.empty?
         out = Snapshot.dump(snapshots.merge(@changes))
         dir = File.dirname(snapshot_path)
         FileUtils.mkdir_p(dir)
@@ -37,10 +39,6 @@ module SnapshotTesting
     end
 
     private
-
-    def key_for(name)
-      "#{name} #{@counter[name]}"
-    end
 
     def snapshot_path
       Snapshot.path(@path)

@@ -1,3 +1,5 @@
+require "snapshot_testing/rspec"
+
 RSpec.describe SnapshotTesting::RSpec do
   include SnapshotTesting::RSpec
 
