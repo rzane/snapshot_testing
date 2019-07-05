@@ -1,30 +1,40 @@
-require 'fileutils'
+require "fileutils"
 
 module SnapshotTesting
   class Recorder
-    attr_reader :snapshots
-
-    def initialize(path, update: false)
-      @path = path
-      @update = update
+    def initialize(name:, path:, update:)
+      @name    = name
+      @path    = path
+      @update  = update
+      @count   = 1
       @changes = {}
-      @counter = Hash.new { |h, k| h[k] = 1 }
     end
 
-    def record(name, actual)
-      key = "#{name} #{@counter[name]}"
+    def snapshot_path
+      Snapshot.path(@path)
+    end
+
+    def snapshots
+      Snapshot.load_file(snapshot_path)
+    rescue Errno::ENOENT
+      {}
+    end
+
+    def record(actual)
+      key = "#{@name} #{@count}"
+      exists = snapshots.key?(key)
       snapshot = snapshots[key]
 
-      if snapshot.nil?
+      if !exists
         @changes[key] = actual
-        @counter[name] += 1
+        @count += 1
         [actual, actual]
       elsif actual == snapshot
-        @counter[name] += 1
+        @count += 1
         [actual, snapshot]
       else
         @changes[key] = actual if @update
-        @counter[name] += 1
+        @count += 1
         [actual, @update ? actual : snapshot]
       end
     end
@@ -36,18 +46,6 @@ module SnapshotTesting
         FileUtils.mkdir_p(dir)
         File.write(snapshot_path, out)
       end
-    end
-
-    private
-
-    def snapshot_path
-      Snapshot.path(@path)
-    end
-
-    def snapshots
-      Snapshot.load_file(snapshot_path)
-    rescue Errno::ENOENT
-      {}
     end
   end
 end

@@ -3,35 +3,31 @@ require "snapshot_testing"
 module SnapshotTesting
   module RSpec
     def self.included(base)
+      base.let :__snapshot_recorder__ do |example|
+        name   = example.description
+        path   = example.metadata[:absolute_file_path]
+        update = !ENV['UPDATE_SNAPSHOTS'].nil?
+        Recorder.new(name: name, path: path, update: update)
+      end
+
       base.after :each do
         __snapshot_recorder__.commit
       end
     end
 
-    def __snapshot_recorder__
-      @_snapshot_recorder_ ||= Recorder.new(
-        ::RSpec.current_example.metadata[:absolute_file_path],
-        update: !ENV['UPDATE_SNAPSHOTS'].nil?
-      )
-    end
-
     def match_snapshot
-      MatchSnapshot.new(
-        recorder: __snapshot_recorder__,
-        name: ::RSpec.current_example.description
-      )
+      MatchSnapshot.new(recorder: __snapshot_recorder__)
     end
 
     class MatchSnapshot
       attr_reader :expected, :actual
 
-      def initialize(name:, recorder:)
-        @name = name
+      def initialize(recorder:)
         @recorder = recorder
       end
 
       def matches?(actual)
-        @actual, @expected = @recorder.record(@name, actual)
+        @actual, @expected = @recorder.record(actual)
         @actual == @expected
       end
 
