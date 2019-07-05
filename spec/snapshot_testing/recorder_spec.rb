@@ -96,6 +96,49 @@ RSpec.describe SnapshotTesting::Recorder do
       allow(recorder).to receive(:write)
     end
 
+    context "when new snapshots are added" do
+      before do
+        allow(recorder).to receive(:snapshots).and_return("example 1" => "hello")
+        recorder.record("hello")
+        recorder.record("goodbye")
+        recorder.commit
+      end
+
+      it "writes snapshots" do
+        expect(recorder).to have_received(:write).with(
+          "example 1" => "hello",
+          "example 2" => "goodbye"
+        )
+      end
+
+      it "warns about written snapshots" do
+        expect(recorder).to have_received(:warn).with(/1 snapshot written/)
+      end
+    end
+
+    context "when new snapshots are updated", :update do
+      before do
+        allow(recorder).to receive(:snapshots).and_return(
+          "example 1" => "hello",
+          "example 2" => "change me"
+        )
+        recorder.record("hello")
+        recorder.record("goodbye")
+        recorder.commit
+      end
+
+      it "writes snapshots" do
+        expect(recorder).to have_received(:write).with(
+          "example 1" => "hello",
+          "example 2" => "goodbye"
+        )
+      end
+
+      it "warns about updated snapshots" do
+        expect(recorder).to have_received(:warn).with(/1 snapshot updated/)
+      end
+    end
+
     context "when keys are stale" do
       before do
         allow(recorder).to receive(:snapshots).and_return(
@@ -107,12 +150,22 @@ RSpec.describe SnapshotTesting::Recorder do
         recorder.commit
       end
 
-      it "warns about obsolete keys" do
+      it "does not write snapshots" do
+        expect(recorder).not_to have_received(:write)
+      end
+
+      it "warns about obsolete snapshots" do
         expect(recorder).to have_received(:warn).with(/1 snapshot obsolete/)
       end
 
-      it "warns about removed keys", :update do
-        expect(recorder).to have_received(:warn).with(/1 snapshot removed/)
+      context "when updating", :update do
+        it "writes snapshots" do
+          expect(recorder).to have_received(:write).with("example 1" => "hello")
+        end
+
+        it "warns about removed snapshots" do
+          expect(recorder).to have_received(:warn).with(/1 snapshot removed/)
+        end
       end
     end
   end
