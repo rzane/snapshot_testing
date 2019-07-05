@@ -4,10 +4,11 @@ module SnapshotTesting
   module RSpec
     def self.included(base)
       base.let :__snapshot_recorder__ do |example|
-        name   = example.description
-        path   = example.metadata[:absolute_file_path]
-        update = !ENV['UPDATE_SNAPSHOTS'].nil?
-        Recorder.new(name: name, path: path, update: update)
+        SnapshotTesting::Recorder.new(
+          name: example.description,
+          path: example.metadata[:absolute_file_path],
+          update: !ENV['UPDATE_SNAPSHOTS'].nil?
+        )
       end
 
       base.after :each do
@@ -16,7 +17,7 @@ module SnapshotTesting
     end
 
     def match_snapshot
-      MatchSnapshot.new(recorder: __snapshot_recorder__)
+      SnapshotTesting::Rspec::MatchSnapshot.new(recorder: __snapshot_recorder__)
     end
 
     class MatchSnapshot
