@@ -1,4 +1,5 @@
 require "fileutils"
+require "pastel"
 
 module SnapshotTesting
   class Recorder
@@ -7,7 +8,8 @@ module SnapshotTesting
       @path    = path
       @update  = update
       @visited = []
-      @changes = {}
+      @inserts = {}
+      @updates = {}
     end
 
     def snapshot_dir
@@ -19,41 +21,66 @@ module SnapshotTesting
     end
 
     def snapshots
-      Snapshot.load_file(snapshot_file)
+      @snapshots ||= Snapshot.load_file(snapshot_file)
     rescue Errno::ENOENT
-      {}
+      @snapshots ||= {}
     end
 
     def record(actual)
-      key = generate_key
-      exists = snapshots.key?(key)
+      count    = @visited.length + 1
+      key      = "#{@name} #{count}"
+      exists   = snapshots.key?(key)
       snapshot = snapshots[key]
 
+      @visited << key
+
       if !exists
-        @changes[key] = actual
+        @inserts[key] = actual
         actual
       elsif actual == snapshot
         snapshot
       else
-        @changes[key] = actual if @update
+        @updates[key] = actual if @update
         @update ? actual : snapshot
       end
     end
 
     def commit
-      unless @changes.empty?
-        FileUtils.mkdir_p(snapshot_dir)
-        File.write(snapshot_file, Snapshot.dump(snapshots.merge(@changes)))
+      pastel   = Pastel.new
+      stale    = snapshots.keys.select { |key| stale_key?(key) }
+      obsolete = @update ? [] : stale
+      removed  = @update ? stale : []
+
+      result = snapshots.merge(@inserts).merge(@updates).reject do |key, _|
+        stale.include?(key)
+      end
+
+      log(:written, @inserts.length, :green) if @inserts.any?
+      log(:updated, @updates.length, :green) if @updates.any?
+      log(:removed, stale.length, :green) if removed.any?
+      log(:obsolete, stale.length, :yellow) if obsolete.any?
+
+      if @inserts.any? || @updates.any? || removed.any?
+        write(result)
       end
     end
 
     private
 
-    def generate_key
-      count = @visited.length + 1
-      key = "#{@name} #{count}"
-      @visited << key
-      key
+    def log(status, count, color)
+      label = count == 1 ? "snapshot" : "snapshots"
+      message = "#{count} #{label} #{status}."
+      warn Pastel.new.public_send(color, message)
+    end
+
+    def write(snapshots)
+      FileUtils.mkdir_p(snapshot_dir)
+      File.write(snapshot_file, Snapshot.dump(snapshots))
+    end
+
+    def stale_key?(key)
+      name = key.sub(/\s\d+$/, "")
+      name == @name && !@visited.include?(key)
     end
   end
 end

@@ -49,27 +49,10 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return("example 1" => "hello")
       end
 
-      it "returns the snapshot value" do
+      it "does nothing" do
         expect(recorder.record("hello")).to eq("hello")
-      end
-
-      it "returns the snapshot value when updating", :update do
-        expect(recorder.record("hello")).to eq("hello")
-      end
-
-      it "does not record a change" do
-        recorder.record("hello")
-        expect(changes).to eq({})
-      end
-
-      it "does not record a change when updating", :update do
-        recorder.record("hello")
-        expect(changes).to eq({})
-      end
-
-      it "records the visit" do
-        recorder.record("hello")
-        expect(visited).to eq(["example 1"])
+        expect(inserts).to eq({})
+        expect(updates).to eq({})
       end
     end
 
@@ -78,27 +61,11 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return({})
       end
 
-      it "returns the actual value" do
+      it "inserts a new snapshot" do
         expect(recorder.record("hello")).to eq("hello")
-      end
-
-      it "returns the actual value when updating", :update do
-        expect(recorder.record("hello")).to eq("hello")
-      end
-
-      it "records a change" do
-        recorder.record("hello")
-        expect(changes).to eq("example 1" => "hello")
-      end
-
-      it "records a change when updating", :update do
-        recorder.record("hello")
-        expect(changes).to eq("example 1" => "hello")
-      end
-
-      it "records the visit" do
-        recorder.record("hello")
         expect(visited).to eq(["example 1"])
+        expect(inserts).to eq("example 1" => "hello")
+        expect(updates).to eq({})
       end
     end
 
@@ -107,27 +74,45 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return("example 1" => "goodbye")
       end
 
-      it "returns the snapshot value" do
+      it "does nothing when updates are disabled" do
         expect(recorder.record("hello")).to eq("goodbye")
-      end
-
-      it "returns the actual value when updating", :update do
-        expect(recorder.record("hello")).to eq("hello")
-      end
-
-      it "does not record a change" do
-        recorder.record("hello")
-        expect(changes).to eq({})
-      end
-
-      it "records a change when updating", :update do
-        recorder.record("hello")
-        expect(changes).to eq("example 1" => "hello")
-      end
-
-      it "records the visit" do
-        recorder.record("hello")
         expect(visited).to eq(["example 1"])
+        expect(inserts).to eq({})
+        expect(updates).to eq({})
+      end
+
+      it "records an update when updating", :update do
+        expect(recorder.record("hello")).to eq("hello")
+        expect(visited).to eq(["example 1"])
+        expect(inserts).to eq({})
+        expect(updates).to eq("example 1" => "hello")
+      end
+    end
+  end
+
+  describe "#commit" do
+    before do
+      allow(recorder).to receive(:warn)
+      allow(recorder).to receive(:write)
+    end
+
+    context "when keys are stale" do
+      before do
+        allow(recorder).to receive(:snapshots).and_return(
+          "example 1" => "hello",
+          "example 2" => "stale"
+        )
+
+        recorder.record("hello")
+        recorder.commit
+      end
+
+      it "warns about obsolete keys" do
+        expect(recorder).to have_received(:warn).with(/1 snapshot obsolete/)
+      end
+
+      it "warns about removed keys", :update do
+        expect(recorder).to have_received(:warn).with(/1 snapshot removed/)
       end
     end
   end
@@ -136,7 +121,11 @@ RSpec.describe SnapshotTesting::Recorder do
     recorder.instance_variable_get(:@visited)
   end
 
-  def changes
-    recorder.instance_variable_get(:@changes)
+  def inserts
+    recorder.instance_variable_get(:@inserts)
+  end
+
+  def updates
+    recorder.instance_variable_get(:@updates)
   end
 end
