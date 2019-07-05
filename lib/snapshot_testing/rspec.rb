@@ -17,7 +17,7 @@ module SnapshotTesting
     end
 
     def match_snapshot
-      SnapshotTesting::Rspec::MatchSnapshot.new(recorder: __snapshot_recorder__)
+      SnapshotTesting::RSpec::MatchSnapshot.new(recorder: __snapshot_recorder__)
     end
 
     class MatchSnapshot

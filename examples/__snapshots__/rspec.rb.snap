@@ -1,0 +1,7 @@
+snapshots["takes a snapshot 1"] = <<~SNAP
+hello
+SNAP
+
+snapshots["takes a snapshot 2"] = <<~SNAP
+goodbye
+SNAP

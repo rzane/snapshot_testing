@@ -2,9 +2,15 @@ require "minitest/autorun"
 require "bundler/setup"
 require "snapshot_testing/minitest"
 
-class ExampleTest < Minitest::Test
+class Minitest::Test
   include SnapshotTesting::Minitest
+end
 
+class Minitest::Spec
+  include SnapshotTesting::Minitest
+end
+
+class ExampleTest < Minitest::Test
   def test_snapshot
     assert_snapshot "hello"
     assert_snapshot "goodbye"
@@ -12,8 +18,6 @@ class ExampleTest < Minitest::Test
 end
 
 class ExampleSpec < Minitest::Spec
-  include SnapshotTesting::Minitest
-
   it "takes a snapshot" do
     "hello".must_match_snapshot
     "goodbye".must_match_snapshot
