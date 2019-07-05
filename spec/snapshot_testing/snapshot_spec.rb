@@ -16,11 +16,6 @@ RSpec.describe SnapshotTesting::Snapshot do
     EOS
   }
 
-  it "translates a path" do
-    path = SnapshotTesting::Snapshot.path("/foo/bar_spec.rb")
-    expect(path).to eq("/foo/__snapshots__/bar_spec.rb.snap")
-  end
-
   it "loads snapshots" do
     expect(SnapshotTesting::Snapshot.load(snapshot)).to eq(data)
   end

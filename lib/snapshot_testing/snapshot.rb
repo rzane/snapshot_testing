@@ -3,19 +3,12 @@ require "snapshot_testing/serializer"
 
 module SnapshotTesting
   module Snapshot
-    DIR = "__snapshots__".freeze
     TEMPLATE = "snapshots[%s] = <<~SNAP\n%s\nSNAP\n".freeze
 
     @@serializers = [SnapshotTesting::Serializer.new]
 
     def self.use(serializer)
       @@serializers.unshift(serializer)
-    end
-
-    def self.path(source)
-      dirname = File.dirname(source)
-      basename = File.basename(source)
-      File.join(dirname, DIR, "#{basename}.snap")
     end
 
     def self.load_file(file)

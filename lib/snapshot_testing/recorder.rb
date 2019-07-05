@@ -2,6 +2,8 @@ require "fileutils"
 
 module SnapshotTesting
   class Recorder
+    DIR = "__snapshots__".freeze
+
     def initialize(name:, path:, update:)
       @name    = name
       @path    = path
@@ -11,7 +13,9 @@ module SnapshotTesting
     end
 
     def snapshot_path
-      Snapshot.path(@path)
+      dirname = File.dirname(@path)
+      basename = File.basename(@path)
+      File.join(dirname, DIR, "#{basename}.snap")
     end
 
     def snapshots
