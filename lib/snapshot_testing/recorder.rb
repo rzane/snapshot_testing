@@ -6,7 +6,7 @@ module SnapshotTesting
       @name    = name
       @path    = path
       @update  = update
-      @count   = 1
+      @visited = []
       @changes = {}
     end
 
@@ -25,20 +25,17 @@ module SnapshotTesting
     end
 
     def record(actual)
-      key = "#{@name} #{@count}"
+      key = generate_key
       exists = snapshots.key?(key)
       snapshot = snapshots[key]
 
       if !exists
         @changes[key] = actual
-        @count += 1
         actual
       elsif actual == snapshot
-        @count += 1
         snapshot
       else
         @changes[key] = actual if @update
-        @count += 1
         @update ? actual : snapshot
       end
     end
@@ -48,6 +45,15 @@ module SnapshotTesting
         FileUtils.mkdir_p(snapshot_dir)
         File.write(snapshot_file, Snapshot.dump(snapshots.merge(@changes)))
       end
+    end
+
+    private
+
+    def generate_key
+      count = @visited.length + 1
+      key = "#{@name} #{count}"
+      @visited << key
+      key
     end
   end
 end

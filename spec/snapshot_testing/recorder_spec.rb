@@ -67,9 +67,9 @@ RSpec.describe SnapshotTesting::Recorder do
         expect(changes).to eq({})
       end
 
-      it "increments the count" do
+      it "records the visit" do
         recorder.record("hello")
-        expect(count).to eq(2)
+        expect(visited).to eq(["example 1"])
       end
     end
 
@@ -96,9 +96,9 @@ RSpec.describe SnapshotTesting::Recorder do
         expect(changes).to eq("example 1" => "hello")
       end
 
-      it "increments the count" do
+      it "records the visit" do
         recorder.record("hello")
-        expect(count).to eq(2)
+        expect(visited).to eq(["example 1"])
       end
     end
 
@@ -125,15 +125,15 @@ RSpec.describe SnapshotTesting::Recorder do
         expect(changes).to eq("example 1" => "hello")
       end
 
-      it "increments the count" do
+      it "records the visit" do
         recorder.record("hello")
-        expect(count).to eq(2)
+        expect(visited).to eq(["example 1"])
       end
     end
   end
 
-  def count
-    recorder.instance_variable_get(:@count)
+  def visited
+    recorder.instance_variable_get(:@visited)
   end
 
   def changes
