@@ -3,7 +3,7 @@ require "bundler/setup"
 require "snapshot_testing/minitest"
 
 class ExampleTest < Minitest::Test
-  prepend SnapshotTesting::Minitest
+  include SnapshotTesting::Minitest
 
   def test_snapshot
     assert_snapshot "hello"
@@ -12,7 +12,7 @@ class ExampleTest < Minitest::Test
 end
 
 class ExampleSpec < Minitest::Spec
-  prepend SnapshotTesting::Minitest
+  include SnapshotTesting::Minitest
 
   it "takes a snapshot" do
     "hello".must_match_snapshot
