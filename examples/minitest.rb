@@ -10,3 +10,12 @@ class ExampleTest < Minitest::Test
     assert_snapshot "goodbye"
   end
 end
+
+class ExampleSpec < Minitest::Spec
+  prepend SnapshotTesting::Minitest
+
+  it "takes a snapshot" do
+    "hello".must_match_snapshot
+    "goodbye".must_match_snapshot
+  end
+end

@@ -1,4 +1,9 @@
 require "snapshot_testing"
+require "minitest/spec"
+
+module Minitest::Expectations
+  infect_an_assertion :assert_snapshot, :must_match_snapshot, true
+end
 
 module SnapshotTesting
   module Minitest
