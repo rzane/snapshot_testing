@@ -27,7 +27,8 @@ module SnapshotTesting
       end
 
       def matches?(actual)
-        @actual, @expected = @recorder.record(actual)
+        @actual = actual
+        @expected = @recorder.record(@actual)
         @actual == @expected
       end
 

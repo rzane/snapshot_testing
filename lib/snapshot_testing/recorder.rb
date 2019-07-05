@@ -28,14 +28,14 @@ module SnapshotTesting
       if !exists
         @changes[key] = actual
         @count += 1
-        [actual, actual]
+        actual
       elsif actual == snapshot
         @count += 1
-        [actual, snapshot]
+        snapshot
       else
         @changes[key] = actual if @update
         @count += 1
-        [actual, @update ? actual : snapshot]
+        @update ? actual : snapshot
       end
     end
 
