@@ -28,4 +28,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "minitest", "~> 5.11.3"
   spec.add_development_dependency "test-unit", "~> 3.2.9"
+  spec.add_development_dependency "simplecov", "~> 0.17.0"
 end
