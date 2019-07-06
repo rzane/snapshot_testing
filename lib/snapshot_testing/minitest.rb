@@ -1,12 +1,13 @@
 require "snapshot_testing"
-require "minitest/spec"
-
-module Minitest::Expectations
-  infect_an_assertion :assert_snapshot, :must_match_snapshot, true
-end
 
 module SnapshotTesting
   module Minitest
+    def self.included(_)
+      return unless defined?(::Minitest::Expectations)
+      return if ::Minitest::Expectations.method_defined?(:must_match_snapshot)
+      ::Minitest::Expectations.infect_an_assertion(:assert_snapshot, :must_match_snapshot, true)
+    end
+
     def before_setup
       @__snapshot_recorder__ = SnapshotTesting::Recorder.new(
         name: name,
