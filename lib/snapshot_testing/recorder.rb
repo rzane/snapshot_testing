@@ -46,23 +46,17 @@ module SnapshotTesting
     end
 
     def commit
-      pastel   = Pastel.new
-      stale    = snapshots.keys.select { |key| stale_key?(key) }
-      obsolete = @update ? [] : stale
-      removed  = @update ? stale : []
+      stale  = snapshots.keys.select { |key| stale_key?(key) }
 
-      result = snapshots.merge(@inserts).merge(@updates).reject do |key, _|
-        stale.include?(key)
-      end
+      result = snapshots.merge(@inserts).merge(@updates)
+      result = result.reject { |key, _| stale.include?(key) } if @update
+
+      write(result) if result != snapshots
 
       log(:written, @inserts.length, :green) if @inserts.any?
       log(:updated, @updates.length, :green) if @updates.any?
-      log(:removed, stale.length, :green) if removed.any?
-      log(:obsolete, stale.length, :yellow) if obsolete.any?
-
-      if @inserts.any? || @updates.any? || removed.any?
-        write(result)
-      end
+      log(:removed, stale.length, :green) if @update && stale.any?
+      log(:obsolete, stale.length, :yellow) if !@update && stale.any?
     end
 
     private

@@ -61,7 +61,7 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return({})
       end
 
-      it "inserts a new snapshot" do
+      it "records an insert" do
         expect(recorder.record("hello")).to eq("hello")
         expect(visited).to eq(["example 1"])
         expect(inserts).to eq("example 1" => "hello")
@@ -74,18 +74,20 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return("example 1" => "goodbye")
       end
 
-      it "does nothing when updates are disabled" do
+      it "does not record an update" do
         expect(recorder.record("hello")).to eq("goodbye")
         expect(visited).to eq(["example 1"])
         expect(inserts).to eq({})
         expect(updates).to eq({})
       end
 
-      it "records an update when updating", :update do
-        expect(recorder.record("hello")).to eq("hello")
-        expect(visited).to eq(["example 1"])
-        expect(inserts).to eq({})
-        expect(updates).to eq("example 1" => "hello")
+      context "when updating", :update do
+        it "records an update" do
+          expect(recorder.record("hello")).to eq("hello")
+          expect(visited).to eq(["example 1"])
+          expect(inserts).to eq({})
+          expect(updates).to eq("example 1" => "hello")
+        end
       end
     end
   end
@@ -116,12 +118,13 @@ RSpec.describe SnapshotTesting::Recorder do
       end
     end
 
-    context "when new snapshots are updated", :update do
+    context "when snapshots are updated", :update do
       before do
         allow(recorder).to receive(:snapshots).and_return(
           "example 1" => "hello",
           "example 2" => "change me"
         )
+
         recorder.record("hello")
         recorder.record("goodbye")
         recorder.commit
