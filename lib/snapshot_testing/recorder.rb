@@ -54,15 +54,15 @@ module SnapshotTesting
       result = result.reject { |k, _| removed.include?(k) } if @update
 
       write(result) if result != snapshots
-      log(:written, added.length, :green) if added.any?
-      log(:updated, changed.length, :green) if @update && changed.any?
-      log(:removed, removed.length, :green) if @update && removed.any?
-      log(:obsolete, removed.length, :yellow) if !@update && removed.any?
+      log(added.length, :written, :green) if added.any?
+      log(changed.length, :updated, :green) if @update && changed.any?
+      log(removed.length, :removed, :green) if @update && removed.any?
+      log(removed.length, :obsolete, :yellow) if !@update && removed.any?
     end
 
     private
 
-    def log(status, count, color)
+    def log(count, status, color)
       label = count == 1 ? "snapshot" : "snapshots"
       message = "#{count} #{label} #{status}."
       warn Pastel.new.public_send(color, message)
