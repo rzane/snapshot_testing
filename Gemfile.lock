@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    snapshot_testing (0.1.0)
+    snapshot_testing (0.1.1)
       pastel (~> 0.7)
 
 GEM
