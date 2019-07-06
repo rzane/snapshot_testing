@@ -1,4 +1,5 @@
 require "bundler/setup"
+require "rspec/autorun"
 require "snapshot_testing/rspec"
 
 RSpec.configure do |config|

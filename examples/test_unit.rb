@@ -1,5 +1,5 @@
-require "test/unit"
 require "bundler/setup"
+require "test/unit"
 require "snapshot_testing/test_unit"
 
 class ExampleTest < Test::Unit::TestCase

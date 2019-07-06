@@ -6,7 +6,7 @@ RSpec::Core::RakeTask.new(:spec)
 task :examples do
   ruby 'examples/minitest.rb'
   ruby 'examples/test_unit.rb'
-  sh 'rspec', 'examples/rspec.rb'
+  ruby 'examples/rspec.rb'
 end
 
 task :default => :spec
