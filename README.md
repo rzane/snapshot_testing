@@ -1,8 +1,12 @@
-# SnapshotTesting
+# :camera: Snapshot Testing
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/snapshot_testing`. To experiment with that code, run `bin/console` for an interactive prompt.
+Snapshot testing for all Ruby test frameworks.
 
-TODO: Delete this and the text above, and describe your gem
+### Features
+
+- Human-readable snapshots
+- Supports RSpec, Minitest, and Test::Unit
+- Custom serializers
 
 ## Installation
 
@@ -16,20 +20,104 @@ And then execute:
 
     $ bundle
 
-Or install it yourself as:
-
-    $ gem install snapshot_testing
-
 ## Usage
 
-TODO: Write usage instructions here
+The examples below will show you how to use `snapshot_testing` in each testing framework.
 
-## Development
+On the first test run, a [`.snap` file](examples/__snapshots__/rspec.rb.snap) will be created. The contents of the `.snap` file will be compared to the value under test on subsequent test runs.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+If the value in the snapshot is not equal to the value under test, the test will fail. You can update the snapshots by rerunning the test suite by setting `UPDATE_SNAPSHOTS=1` in the environment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+### RSpec
+
+Configure `snapshot_testing` in your `spec_helper.rb`:
+
+```ruby
+require 'snapshot_testing/rspec'
+
+RSpec.configure do |config|
+  config.include SnapshotTesting::RSpec
+end
+```
+
+Now, you can take snapshots:
+
+```ruby
+RSpec.describe "Example" do
+  it "takes a snapshot" do
+    expect("hello").to match_snapshot
+    expect("goodbye").to match_snapshot
+  end
+end
+```
+
+### Minitest
+
+```ruby
+require 'minitest/autorun'
+require 'snapshot_testing/minitest'
+
+class ExampleTest < Minitest::Test
+  include SnapshotTesting::Minitest
+
+  def test_takes_a_snapshot
+    assert_snapshot "hello"
+    assert_snapshot "goodbye"
+  end
+end
+
+class ExampleSpec < Minitest::Spec
+  include SnapshotTesting::Minitest
+
+  it "takes a snapshot" do
+    "hello".must_match_snapshot
+    "goodbye".must_match_snapshot
+  end
+end
+```
+
+### Test::Unit
+
+```ruby
+require 'test/unit'
+require 'snapshot_testing/test_unit'
+
+class ExampleTest < Test::Unit::TestCase
+  include SnapshotTesting::TestUnit
+
+  def test_snapshot
+    assert_snapshot "hello"
+    assert_snapshot "goodbye"
+  end
+end
+```
+
+## Custom Serializers
+
+Sometimes, you might want to define how objects get serialized as a snapshot. For example, you could define a custom serializer to convert an object to YAML.
+
+```ruby
+class PersonSerializer
+  def accepts?(object)
+    object.is_a? Person
+  end
+
+  def dump(object)
+    YAML.dump(object)
+  end
+end
+
+SnapshotTesting::Snapshot.use PersonSerializer.new
+```
+
+Now, in your test, you can take snapshots of `Person` objects:
+
+```ruby
+it "serializes a person" do
+  expect(Person.new).to match_snapshot
+end
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/snapshot_testing.
+Bug reports and pull requests are welcome on GitHub at https://github.com/rzane/snapshot_testing.
