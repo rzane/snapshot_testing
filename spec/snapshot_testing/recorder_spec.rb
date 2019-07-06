@@ -49,10 +49,13 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return("example 1" => "hello")
       end
 
-      it "does nothing" do
+      it "returns the actual value" do
         expect(recorder.record("hello")).to eq("hello")
-        expect(inserts).to eq({})
-        expect(updates).to eq({})
+      end
+
+      it "records the actual value" do
+        recorder.record("hello")
+        expect(state).to eq("example 1" => "hello")
       end
     end
 
@@ -61,11 +64,13 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return({})
       end
 
-      it "records an insert" do
+      it "returns the actual value" do
         expect(recorder.record("hello")).to eq("hello")
-        expect(visited).to eq(["example 1"])
-        expect(inserts).to eq("example 1" => "hello")
-        expect(updates).to eq({})
+      end
+
+      it "records the actual value" do
+        recorder.record("hello")
+        expect(state).to eq("example 1" => "hello")
       end
     end
 
@@ -74,20 +79,17 @@ RSpec.describe SnapshotTesting::Recorder do
         allow(recorder).to receive(:snapshots).and_return("example 1" => "goodbye")
       end
 
-      it "does not record an update" do
+      it "returns the snapshot value" do
         expect(recorder.record("hello")).to eq("goodbye")
-        expect(visited).to eq(["example 1"])
-        expect(inserts).to eq({})
-        expect(updates).to eq({})
       end
 
-      context "when updating", :update do
-        it "records an update" do
-          expect(recorder.record("hello")).to eq("hello")
-          expect(visited).to eq(["example 1"])
-          expect(inserts).to eq({})
-          expect(updates).to eq("example 1" => "hello")
-        end
+      it "returns the actual value when updating", :update do
+        expect(recorder.record("hello")).to eq("hello")
+      end
+
+      it "records the actual value" do
+        recorder.record("hello")
+        expect(state).to eq("example 1" => "hello")
       end
     end
   end
@@ -173,15 +175,7 @@ RSpec.describe SnapshotTesting::Recorder do
     end
   end
 
-  def visited
-    recorder.instance_variable_get(:@visited)
-  end
-
-  def inserts
-    recorder.instance_variable_get(:@inserts)
-  end
-
-  def updates
-    recorder.instance_variable_get(:@updates)
+  def state
+    recorder.instance_variable_get(:@state)
   end
 end

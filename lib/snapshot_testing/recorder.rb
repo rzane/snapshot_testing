@@ -4,12 +4,10 @@ require "pastel"
 module SnapshotTesting
   class Recorder
     def initialize(name:, path:, update:)
-      @name    = name
-      @path    = path
-      @update  = update
-      @visited = []
-      @inserts = {}
-      @updates = {}
+      @name   = name
+      @path   = path
+      @update = update
+      @state  = {}
     end
 
     def snapshot_dir
@@ -21,42 +19,45 @@ module SnapshotTesting
     end
 
     def snapshots
-      @snapshots ||= Snapshot.load_file(snapshot_file)
-    rescue Errno::ENOENT
-      @snapshots ||= {}
-    end
-
-    def record(actual)
-      count    = @visited.length + 1
-      key      = "#{@name} #{count}"
-      exists   = snapshots.key?(key)
-      snapshot = snapshots[key]
-
-      @visited << key
-
-      if !exists
-        @inserts[key] = actual
-        actual
-      elsif actual == snapshot
-        snapshot
-      else
-        @updates[key] = actual if @update
-        @update ? actual : snapshot
+      @snapshots ||= begin
+        Snapshot.load_file(snapshot_file)
+      rescue Errno::ENOENT
+        {}
       end
     end
 
-    def commit
-      stale  = snapshots.keys.select { |key| stale_key?(key) }
+    def record(actual)
+      key = "#{@name} #{@state.length + 1}"
 
-      result = snapshots.merge(@inserts).merge(@updates)
-      result = result.reject { |key, _| stale.include?(key) } if @update
+      # keep track each encounter, so we can diff later
+      @state[key] = actual
+
+      # pass the test when updating snapshots
+      return actual if @update
+
+      # pass the test when the snapshot does not exist
+      return actual unless snapshots.key?(key)
+
+      # otherwise, compare actual to the snapshot
+      snapshots[key]
+    end
+
+    def commit
+      added   = @state.select { |k, _| !snapshots.key?(k) }
+      changed = @state.select { |k, v| snapshots.key?(k) && snapshots[k] != v }
+      removed = snapshots.keys.select do |k|
+        k.match?(/^#{@name}\s\d+$/) && !@state.key?(k)
+      end
+
+      result = snapshots.merge(added)
+      result = result.merge(changed) if @update
+      result = result.reject { |k, _| removed.include?(k) } if @update
 
       write(result) if result != snapshots
-
-      log(:written, @inserts.length, :green) if @inserts.any?
-      log(:updated, @updates.length, :green) if @updates.any?
-      log(:removed, stale.length, :green) if @update && stale.any?
-      log(:obsolete, stale.length, :yellow) if !@update && stale.any?
+      log(:written, added.length, :green) if added.any?
+      log(:updated, changed.length, :green) if @update && changed.any?
+      log(:removed, removed.length, :green) if @update && removed.any?
+      log(:obsolete, removed.length, :yellow) if !@update && removed.any?
     end
 
     private
@@ -70,11 +71,6 @@ module SnapshotTesting
     def write(snapshots)
       FileUtils.mkdir_p(snapshot_dir)
       File.write(snapshot_file, Snapshot.dump(snapshots))
-    end
-
-    def stale_key?(key)
-      name = key.sub(/\s\d+$/, "")
-      name == @name && !@visited.include?(key)
     end
   end
 end
