@@ -1,21 +1,4 @@
 RSpec.describe SnapshotTesting::Snapshot do
-  class Jawn
-    attr_reader :value
-    def initialize(value)
-      @value = value
-    end
-  end
-
-  class JawnSerializer
-    def accepts?(object)
-      object.is_a? Jawn
-    end
-
-    def dump(jawn)
-      jawn.value
-    end
-  end
-
   let(:data) {
     {
       "simple" => "foo",
@@ -50,14 +33,20 @@ RSpec.describe SnapshotTesting::Snapshot do
   end
 
   it "allows the use of custom serializers" do
-    SnapshotTesting::Snapshot.use(JawnSerializer.new)
+    Jawn = Struct.new(:value)
+    JawnSerializer = Class.new do
+      def accepts?(object) object.is_a? Jawn end
+      def dump(jawn) jawn.value end
+    end
 
-    snapshot = SnapshotTesting::Snapshot.dump("jawn" => Jawn.new("jint"))
-
-    expect(snapshot).to eq(<<~EOS)
+    data = { "jawn" => Jawn.new("jint") }
+    snapshot = <<~EOS
     snapshots["jawn"] = <<-SNAP
     jint
     SNAP
     EOS
+
+    SnapshotTesting::Snapshot.use(JawnSerializer.new)
+    expect(SnapshotTesting::Snapshot.dump(data)).to eq(snapshot)
   end
 end
