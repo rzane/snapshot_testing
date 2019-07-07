@@ -1,15 +1,15 @@
-snapshots["test_0001_takes a snapshot 1"] = <<~SNAP
+snapshots["test_0001_takes a snapshot 1"] = <<-SNAP
 hello
 SNAP
 
-snapshots["test_0001_takes a snapshot 2"] = <<~SNAP
+snapshots["test_0001_takes a snapshot 2"] = <<-SNAP
 goodbye
 SNAP
 
-snapshots["test_snapshot 1"] = <<~SNAP
+snapshots["test_snapshot 1"] = <<-SNAP
 hello
 SNAP
 
-snapshots["test_snapshot 2"] = <<~SNAP
+snapshots["test_snapshot 2"] = <<-SNAP
 goodbye
 SNAP
