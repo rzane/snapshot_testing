@@ -3,7 +3,7 @@ require "snapshot_testing/serializer"
 
 module SnapshotTesting
   module Snapshot
-    TEMPLATE = "snapshots[%s] = <<~SNAP\n%s\nSNAP\n".freeze
+    TEMPLATE = "snapshots[%s] = <<-SNAP\n%s\nSNAP\n".freeze
 
     @@serializers = [SnapshotTesting::Serializer.new]
 

@@ -17,18 +17,26 @@ RSpec.describe SnapshotTesting::Snapshot do
   end
 
   let(:data) {
-    { "hello" => "world", "foo" => "bar\nbaz" }
+    {
+      "simple" => "foo",
+      "multiline" => "foo\nbar",
+      "indented" => "  foo"
+    }
   }
 
   let(:snapshot) {
     <<~EOS
-    snapshots["hello"] = <<~SNAP
-    world
+    snapshots["simple"] = <<-SNAP
+    foo
     SNAP
 
-    snapshots["foo"] = <<~SNAP
+    snapshots["multiline"] = <<-SNAP
+    foo
     bar
-    baz
+    SNAP
+
+    snapshots["indented"] = <<-SNAP
+      foo
     SNAP
     EOS
   }
@@ -47,7 +55,7 @@ RSpec.describe SnapshotTesting::Snapshot do
     snapshot = SnapshotTesting::Snapshot.dump("jawn" => Jawn.new("jint"))
 
     expect(snapshot).to eq(<<~EOS)
-    snapshots["jawn"] = <<~SNAP
+    snapshots["jawn"] = <<-SNAP
     jint
     SNAP
     EOS
