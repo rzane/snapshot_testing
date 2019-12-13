@@ -1,5 +1,4 @@
 require "fileutils"
-require "pastel"
 
 module SnapshotTesting
   class Recorder
@@ -65,7 +64,13 @@ module SnapshotTesting
     def log(count, status, color)
       label = count == 1 ? "snapshot" : "snapshots"
       message = "#{count} #{label} #{status}."
-      warn Pastel.new.public_send(color, message)
+
+      case color
+      when :yellow
+        warn "\e[33m#{message}\e[0m"
+      when :green
+        warn "\e[32m#{message}\e[0m"
+      end
     end
 
     def write(snapshots)
