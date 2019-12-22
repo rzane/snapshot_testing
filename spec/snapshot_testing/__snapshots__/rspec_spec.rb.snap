@@ -5,3 +5,7 @@ SNAP
 snapshots["performs snapshot tests 2"] = <<-SNAP
 goodbye
 SNAP
+
+snapshots["sanitizes output 1"] = <<-SNAP
+\#{foo}
+SNAP

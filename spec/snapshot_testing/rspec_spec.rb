@@ -7,4 +7,8 @@ RSpec.describe SnapshotTesting::RSpec do
     expect("hello").to match_snapshot
     expect("goodbye").to match_snapshot
   end
+
+  it "sanitizes output" do
+    expect("\#{foo}").to match_snapshot
+  end
 end
