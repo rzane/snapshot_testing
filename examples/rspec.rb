@@ -11,4 +11,8 @@ RSpec.describe "Example" do
     expect("hello").to match_snapshot
     expect("goodbye").to match_snapshot
   end
+
+  it "takes a named snapshot" do
+    expect("named").to match_snapshot("named.rspec.txt")
+  end
 end

@@ -9,4 +9,8 @@ class ExampleTest < Test::Unit::TestCase
     assert_snapshot "hello"
     assert_snapshot "goodbye"
   end
+
+  def test_named_snapshot
+    assert_snapshot "named.unit.txt", "named"
+  end
 end
