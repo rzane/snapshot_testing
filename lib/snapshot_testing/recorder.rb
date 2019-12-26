@@ -25,6 +25,10 @@ module SnapshotTesting
       end
     end
 
+    def update?
+      @update
+    end
+
     def record(actual)
       key = "#{@name} #{@state.length + 1}"
 
@@ -32,7 +36,7 @@ module SnapshotTesting
       @state[key] = actual
 
       # pass the test when updating snapshots
-      return actual if @update
+      return actual if update?
 
       # pass the test when the snapshot does not exist
       return actual unless snapshots.key?(key)
@@ -49,14 +53,14 @@ module SnapshotTesting
       end
 
       result = snapshots.merge(added)
-      result = result.merge(changed) if @update
-      result = result.reject { |k, _| removed.include?(k) } if @update
+      result = result.merge(changed) if update?
+      result = result.reject { |k, _| removed.include?(k) } if update?
 
       write(result) if result != snapshots
       log(added.length, :written, :green) if added.any?
-      log(changed.length, :updated, :green) if @update && changed.any?
-      log(removed.length, :removed, :green) if @update && removed.any?
-      log(removed.length, :obsolete, :yellow) if !@update && removed.any?
+      log(changed.length, :updated, :green) if update? && changed.any?
+      log(removed.length, :removed, :green) if update? && removed.any?
+      log(removed.length, :obsolete, :yellow) if !update? && removed.any?
     end
 
     private
