@@ -2,12 +2,6 @@ require "snapshot_testing"
 
 module SnapshotTesting
   module Minitest
-    def self.included(_)
-      return unless defined?(::Minitest::Expectations)
-      return if ::Minitest::Expectations.method_defined?(:must_match_snapshot)
-      ::Minitest::Expectations.infect_an_assertion(:assert_snapshot, :must_match_snapshot)
-    end
-
     def before_setup
       @__snapshot_recorder__ = SnapshotTesting::Recorder.new(
         name: name,
@@ -27,6 +21,10 @@ module SnapshotTesting
       else
         assert_equal(@__snapshot_recorder__.record_file(name, actual), actual)
       end
+    end
+
+    if respond_to? :infect_an_assertion
+      infect_an_assertion :assert_snapshot, :must_match_snapshot
     end
   end
 end
