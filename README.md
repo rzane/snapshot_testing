@@ -47,6 +47,7 @@ RSpec.describe "Example" do
   it "takes a snapshot" do
     expect("hello").to match_snapshot
     expect("goodbye").to match_snapshot
+    expect("hello").to match_snapshot("hello.txt")
   end
 end
 ```
@@ -63,6 +64,7 @@ class ExampleTest < Minitest::Test
   def test_takes_a_snapshot
     assert_snapshot "hello"
     assert_snapshot "goodbye"
+    assert_snapshot "hello.txt", "hello"
   end
 end
 
@@ -70,8 +72,9 @@ class ExampleSpec < Minitest::Spec
   include SnapshotTesting::Minitest
 
   it "takes a snapshot" do
-    "hello".must_match_snapshot
-    "goodbye".must_match_snapshot
+    _("hello").must_match_snapshot
+    _("goodbye").must_match_snapshot
+    _("hello").must_match_snapshot "hello.txt"
   end
 end
 ```
@@ -88,6 +91,7 @@ class ExampleTest < Test::Unit::TestCase
   def test_snapshot
     assert_snapshot "hello"
     assert_snapshot "goodbye"
+    assert_snapshot "hello.txt", "hello"
   end
 end
 ```
