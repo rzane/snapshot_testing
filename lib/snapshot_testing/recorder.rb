@@ -23,6 +23,24 @@ module SnapshotTesting
       end
     end
 
+    def record_file(name, actual)
+      expected = begin
+        read(name)
+      rescue Errno::ENOENT
+        write(name, actual)
+        log(1, :written)
+        actual
+      end
+
+      if update? && actual != expected
+        write(name, actual)
+        log(1, :updated)
+        actual
+      else
+        expected
+      end
+    end
+
     def record(actual)
       key = "#{name} #{visited.length + 1}"
 
@@ -91,12 +109,13 @@ module SnapshotTesting
       warn "\e[33m#{count} #{label} #{status}\e[0m"
     end
 
-      case color
-      when :yellow
-        warn "\e[33m#{message}\e[0m"
-      when :green
-        warn "\e[32m#{message}\e[0m"
-      end
+    def read(name)
+      File.read(File.join(snapshots_path, name))
+    end
+
+    def write(name, data)
+      FileUtils.mkdir_p(snapshots_path)
+      File.write(File.join(snapshots_path, name), data)
     end
 
     def write_snapshots(snapshots)

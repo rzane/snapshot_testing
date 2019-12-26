@@ -17,9 +17,14 @@ module SnapshotTesting
       end
     end
 
-    matcher :match_snapshot do
+    matcher :match_snapshot do |name|
       match do |actual|
-        @expected = __snapshot_recorder__.record(actual)
+        @expected = if name.nil?
+          __snapshot_recorder__.record(actual)
+        else
+          __snapshot_recorder__.record_file(name, actual)
+        end
+
         @expected == actual
       end
 

@@ -15,8 +15,12 @@ module SnapshotTesting
       @__snapshot_recorder__.commit
     end
 
-    def assert_snapshot(actual)
-      assert_equal(@__snapshot_recorder__.record(actual), actual)
+    def assert_snapshot(name = nil, actual)
+      if name.nil?
+        assert_equal(@__snapshot_recorder__.record(actual), actual)
+      else
+        assert_equal(@__snapshot_recorder__.record_file(name, actual), actual)
+      end
     end
   end
 end
