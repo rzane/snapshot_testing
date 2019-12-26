@@ -19,15 +19,9 @@ RSpec.describe SnapshotTesting::Recorder do
     )
   }
 
-  describe "#snapshot_dir" do
+  describe "#snapshot_path" do
     it "translates the path" do
-      expect(recorder.snapshot_dir).to eq("/foo/__snapshots__")
-    end
-  end
-
-  describe "#snapshot_file" do
-    it "translates the path" do
-      expect(recorder.snapshot_file).to eq("/foo/__snapshots__/bar_spec.rb.snap")
+      expect(recorder.snapshot_path).to eq("/foo/__snapshots__/bar_spec.rb.snap")
     end
   end
 

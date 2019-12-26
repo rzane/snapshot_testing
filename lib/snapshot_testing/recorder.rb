@@ -9,31 +9,23 @@ module SnapshotTesting
       @state  = {}
     end
 
-    def snapshot_dir
-      File.join(File.dirname(@path), "__snapshots__")
-    end
-
-    def snapshot_file
-      File.join(snapshot_dir, "#{File.basename(@path)}.snap")
+    def snapshot_path
+      File.join(snapshots_path, "#{File.basename(path)}.snap")
     end
 
     def snapshots
       @snapshots ||= begin
-        Snapshot.load_file(snapshot_file)
+        Snapshot.load_file(snapshot_path)
       rescue Errno::ENOENT
         {}
       end
     end
 
-    def update?
-      @update
-    end
-
     def record(actual)
-      key = "#{@name} #{@state.length + 1}"
+      key = "#{name} #{state.length + 1}"
 
       # keep track each encounter, so we can diff later
-      @state[key] = actual
+      state[key] = actual
 
       # pass the test when updating snapshots
       return actual if update?
@@ -46,10 +38,10 @@ module SnapshotTesting
     end
 
     def commit
-      added   = @state.select { |k, _| !snapshots.key?(k) }
-      changed = @state.select { |k, v| snapshots.key?(k) && snapshots[k] != v }
+      added   = state.select { |k, _| !snapshots.key?(k) }
+      changed = state.select { |k, v| snapshots.key?(k) && snapshots[k] != v }
       removed = snapshots.keys.select do |k|
-        k.match?(/^#{@name}\s\d+$/) && !@state.key?(k)
+        k.match?(/^#{name}\s\d+$/) && !state.key?(k)
       end
 
       result = snapshots.merge(added)
@@ -65,6 +57,16 @@ module SnapshotTesting
 
     private
 
+    attr_reader :name, :path, :state
+
+    def update?
+      @update
+    end
+
+    def snapshots_path
+      File.join(File.dirname(path), "__snapshots__")
+    end
+
     def log(count, status, color)
       label = count == 1 ? "snapshot" : "snapshots"
       message = "#{count} #{label} #{status}."
@@ -78,8 +80,8 @@ module SnapshotTesting
     end
 
     def write(snapshots)
-      FileUtils.mkdir_p(snapshot_dir)
-      File.write(snapshot_file, Snapshot.dump(snapshots))
+      FileUtils.mkdir_p(snapshots_path)
+      File.write(snapshot_path, Snapshot.dump(snapshots))
     end
   end
 end
