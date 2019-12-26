@@ -2,6 +2,8 @@ require "snapshot_testing"
 
 module SnapshotTesting
   module RSpec
+    extend ::RSpec::Matchers::DSL
+
     def self.included(base)
       base.let :__snapshot_recorder__ do |example|
         SnapshotTesting::Recorder.new(
@@ -16,35 +18,25 @@ module SnapshotTesting
       end
     end
 
-    def match_snapshot
-      SnapshotTesting::RSpec::MatchSnapshot.new(recorder: __snapshot_recorder__)
-    end
-
-    class MatchSnapshot
-      attr_reader :expected, :actual
-
-      def initialize(recorder:)
-        @recorder = recorder
+    matcher :match_snapshot do
+      match do |actual|
+        @expected = __snapshot_recorder__.record(actual)
+        @expected == actual
       end
 
-      def matches?(actual)
-        @actual = actual
-        @expected = @recorder.record(@actual)
-        @actual == @expected
+      diffable
+      description { "match snapshot #{expected_formatted}"}
+
+      failure_message do |actual|
+        "\nexpected: #{expected_formatted}\n     got: #{actual_formatted}\n\n(compared using ==)\n"
       end
 
-      def failure_message
-        expected = ::RSpec::Support::ObjectFormatter.format(@expected)
-        actual = ::RSpec::Support::ObjectFormatter.format(@actual)
-        "\nexpected: #{expected}\n     got: #{actual}\n\n(compared using ==)\n"
+      def expected_formatted
+        ::RSpec::Support::ObjectFormatter.format(@expected)
       end
 
-      def diffable?
-        true
-      end
-
-      def supports_block_expectations?
-        false
+      def actual_formatted
+        ::RSpec::Support::ObjectFormatter.format(@actual)
       end
     end
   end
