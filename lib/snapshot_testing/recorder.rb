@@ -6,7 +6,9 @@ module SnapshotTesting
       @name   = name
       @path   = path
       @update = update
-      @state  = {}
+      @visited = []
+      @added = 0
+      @updated = 0
     end
 
     def snapshot_path
@@ -22,54 +24,72 @@ module SnapshotTesting
     end
 
     def record(actual)
-      key = "#{name} #{state.length + 1}"
+      key = "#{name} #{visited.length + 1}"
 
-      # keep track each encounter, so we can diff later
-      state[key] = actual
+      self.visited << key
 
-      # pass the test when updating snapshots
-      return actual if update?
+      unless snapshots.key?(key)
+        self.added += 1
+        self.snapshots[key] = actual
+      end
 
-      # pass the test when the snapshot does not exist
-      return actual unless snapshots.key?(key)
+      if update? && actual != snapshots[key]
+        self.updated += 1
+        self.snapshots[key] = actual
+      end
 
-      # otherwise, compare actual to the snapshot
       snapshots[key]
     end
 
     def commit
-      added   = state.select { |k, _| !snapshots.key?(k) }
-      changed = state.select { |k, v| snapshots.key?(k) && snapshots[k] != v }
-      removed = snapshots.keys.select do |k|
-        k.match?(/^#{name}\s\d+$/) && !state.key?(k)
-      end
+      removed = snapshots.keys - visited
+      removed = removed.grep(/^#{name}\s\d+$/)
+      removed.each { |key| snapshots.delete(key) }
 
-      result = snapshots.merge(added)
-      result = result.merge(changed) if update?
-      result = result.reject { |k, _| removed.include?(k) } if update?
-
-      write(result) if result != snapshots
-      log(added.length, :written, :green) if added.any?
-      log(changed.length, :updated, :green) if update? && changed.any?
-      log(removed.length, :removed, :green) if update? && removed.any?
-      log(removed.length, :obsolete, :yellow) if !update? && removed.any?
+      write_snapshots(snapshots) if write?
+      log(added, :written) unless added.zero?
+      log(updated, :updated) unless updated.zero?
+      log(removed.length, :removed) if update? && !removed.empty?
+      log(removed.length, :obsolete) if !update? && !removed.empty?
     end
+
+    protected
+
+    # the number of added snapshots
+    attr_accessor :added
+
+    # the number of updated snapshots
+    attr_accessor :updated
+
+    # all snapshots that have been compared
+    attr_reader :visited
 
     private
 
-    attr_reader :name, :path, :state
+    # the name of the current test
+    attr_reader :name
 
+    # the file location of the current test
+    attr_reader :path
+
+    # should we update failing snapshots?
     def update?
       @update
+    end
+
+    # should we write to the filesystem?
+    def write?
+      update? || !added.zero?
     end
 
     def snapshots_path
       File.join(File.dirname(path), "__snapshots__")
     end
 
-    def log(count, status, color)
+    def log(count, status)
       label = count == 1 ? "snapshot" : "snapshots"
-      message = "#{count} #{label} #{status}."
+      warn "\e[33m#{count} #{label} #{status}\e[0m"
+    end
 
       case color
       when :yellow
@@ -79,7 +99,7 @@ module SnapshotTesting
       end
     end
 
-    def write(snapshots)
+    def write_snapshots(snapshots)
       FileUtils.mkdir_p(snapshots_path)
       File.write(snapshot_path, Snapshot.dump(snapshots))
     end

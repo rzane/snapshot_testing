@@ -1,16 +1,4 @@
 RSpec.describe SnapshotTesting::Recorder do
-  let(:snapshot_file) {
-    <<~EOS
-    snapshots["example"] = <<~SNAP
-    hello
-    SNAP
-    EOS
-  }
-
-  let(:snapshots) {
-    {"example" => "hello"}
-  }
-
   subject(:recorder) { |example|
     SnapshotTesting::Recorder.new(
       name: "example",
@@ -27,8 +15,13 @@ RSpec.describe SnapshotTesting::Recorder do
 
   describe "#snapshots" do
     it "loads snapshots from a file" do
-      allow(File).to receive(:read).and_return(snapshot_file)
-      expect(recorder.snapshots).to eq(snapshots)
+      allow(File).to receive(:read).and_return(<<~EOS)
+        snapshots["example"] = <<~SNAP
+        hello
+        SNAP
+      EOS
+
+      expect(recorder.snapshots).to eq("example" => "hello")
     end
 
     it "defaults to an empty hash when file does not exist" do
@@ -40,7 +33,7 @@ RSpec.describe SnapshotTesting::Recorder do
   describe "#record" do
     context "when the snapshot matches" do
       before do
-        allow(recorder).to receive(:snapshots).and_return("example 1" => "hello")
+        record_snapshots("example 1" => "hello")
       end
 
       it "returns the actual value" do
@@ -49,13 +42,13 @@ RSpec.describe SnapshotTesting::Recorder do
 
       it "records the actual value" do
         recorder.record("hello")
-        expect(state).to eq("example 1" => "hello")
+        expect(recorder.snapshots).to eq("example 1" => "hello")
       end
     end
 
     context "when the snapshot does not exist" do
       before do
-        allow(recorder).to receive(:snapshots).and_return({})
+        record_snapshots({})
       end
 
       it "returns the actual value" do
@@ -64,13 +57,13 @@ RSpec.describe SnapshotTesting::Recorder do
 
       it "records the actual value" do
         recorder.record("hello")
-        expect(state).to eq("example 1" => "hello")
+        expect(recorder.snapshots).to eq("example 1" => "hello")
       end
     end
 
     context "when the snapshot does not match" do
       before do
-        allow(recorder).to receive(:snapshots).and_return("example 1" => "goodbye")
+        record_snapshots("example 1" => "goodbye")
       end
 
       it "returns the snapshot value" do
@@ -81,9 +74,9 @@ RSpec.describe SnapshotTesting::Recorder do
         expect(recorder.record("hello")).to eq("hello")
       end
 
-      it "records the actual value" do
+      it "does not record the actual value" do
         recorder.record("hello")
-        expect(state).to eq("example 1" => "hello")
+        expect(recorder.snapshots).to eq("example 1" => "goodbye")
       end
     end
   end
@@ -91,19 +84,19 @@ RSpec.describe SnapshotTesting::Recorder do
   describe "#commit" do
     before do
       allow(recorder).to receive(:warn)
-      allow(recorder).to receive(:write)
+      allow(recorder).to receive(:write_snapshots)
     end
 
     context "when new snapshots are added" do
       before do
-        allow(recorder).to receive(:snapshots).and_return("example 1" => "hello")
+        record_snapshots("example 1" => "hello")
         recorder.record("hello")
         recorder.record("goodbye")
         recorder.commit
       end
 
       it "writes snapshots" do
-        expect(recorder).to have_received(:write).with(
+        expect(recorder).to have_received(:write_snapshots).with(
           "example 1" => "hello",
           "example 2" => "goodbye"
         )
@@ -116,18 +109,14 @@ RSpec.describe SnapshotTesting::Recorder do
 
     context "when snapshots are updated", :update do
       before do
-        allow(recorder).to receive(:snapshots).and_return(
-          "example 1" => "hello",
-          "example 2" => "change me"
-        )
-
+        record_snapshots("example 1" => "hello", "example 2" => "change me")
         recorder.record("hello")
         recorder.record("goodbye")
         recorder.commit
       end
 
       it "writes snapshots" do
-        expect(recorder).to have_received(:write).with(
+        expect(recorder).to have_received(:write_snapshots).with(
           "example 1" => "hello",
           "example 2" => "goodbye"
         )
@@ -140,17 +129,13 @@ RSpec.describe SnapshotTesting::Recorder do
 
     context "when keys are stale" do
       before do
-        allow(recorder).to receive(:snapshots).and_return(
-          "example 1" => "hello",
-          "example 2" => "stale"
-        )
-
+        record_snapshots("example 1" => "hello", "example 2" => "stale")
         recorder.record("hello")
         recorder.commit
       end
 
       it "does not write snapshots" do
-        expect(recorder).not_to have_received(:write)
+        expect(recorder).not_to have_received(:write_snapshots)
       end
 
       it "warns about obsolete snapshots" do
@@ -159,7 +144,7 @@ RSpec.describe SnapshotTesting::Recorder do
 
       context "when updating", :update do
         it "writes snapshots" do
-          expect(recorder).to have_received(:write).with("example 1" => "hello")
+          expect(recorder).to have_received(:write_snapshots).with("example 1" => "hello")
         end
 
         it "warns about removed snapshots" do
@@ -169,7 +154,7 @@ RSpec.describe SnapshotTesting::Recorder do
     end
   end
 
-  def state
-    recorder.instance_variable_get(:@state)
+  def record_snapshots(snapshots)
+    recorder.instance_variable_set(:@snapshots, snapshots)
   end
 end
