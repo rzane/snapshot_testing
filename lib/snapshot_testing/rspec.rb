@@ -8,8 +8,7 @@ module SnapshotTesting
       base.let :__snapshot_recorder__ do |example|
         SnapshotTesting::Recorder.new(
           name: example.description,
-          path: example.metadata[:absolute_file_path],
-          update: !ENV['UPDATE_SNAPSHOTS'].nil?
+          path: example.metadata[:absolute_file_path]
         )
       end
 

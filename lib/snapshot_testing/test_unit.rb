@@ -5,8 +5,7 @@ module SnapshotTesting
     def setup
       @__snapshot_recorder__ = SnapshotTesting::Recorder.new(
         name: method_name,
-        path: method(method_name).source_location.first,
-        update: !ENV['UPDATE_SNAPSHOTS'].nil?
+        path: method(method_name).source_location.first
       )
       super
     end

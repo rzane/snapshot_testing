@@ -2,7 +2,7 @@ require "fileutils"
 
 module SnapshotTesting
   class Recorder
-    def initialize(name:, path:, update:)
+    def initialize(name:, path:, update: SnapshotTesting.update?)
       @name   = name
       @path   = path
       @update = update
