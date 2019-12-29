@@ -13,6 +13,12 @@ RSpec.describe "Example" do
   end
 
   it "takes a named snapshot" do
-    expect("named").to match_snapshot("named.rspec.txt")
+    message = <<~EOS
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam diam
+      urna, dignissim a faucibus eu, malesuada vitae tellus. Aliquam dignissim
+      volutpat fermentum. Nam ultricies risus ac ornare venenatis.
+    EOS
+
+    expect(message).to match_snapshot("named.rspec.txt")
   end
 end

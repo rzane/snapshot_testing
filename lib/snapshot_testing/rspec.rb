@@ -19,28 +19,24 @@ module SnapshotTesting
 
     matcher :match_snapshot do |name|
       match do |actual|
+        @actual = actual
         @expected = if name.nil?
           __snapshot_recorder__.record(actual)
         else
           __snapshot_recorder__.record_file(name, actual)
         end
 
-        @expected == actual
+        @expected == @actual
       end
 
-      diffable
-      description { "match snapshot #{expected_formatted}"}
+      description { "match snapshot #{@expected.inspect}"}
 
-      failure_message do |actual|
-        "\nexpected: #{expected_formatted}\n     got: #{actual_formatted}\n\n(compared using ==)\n"
-      end
+      failure_message do
+        diff = ::RSpec::Expectations.differ.diff(@actual, @expected)
 
-      def expected_formatted
-        ::RSpec::Support::ObjectFormatter.format(@expected)
-      end
-
-      def actual_formatted
-        ::RSpec::Support::ObjectFormatter.format(@actual)
+        message = "\nexpected: #{@expected.inspect}\n     got: #{@actual.inspect}\n"
+        message = "#{message}\nDiff: #{diff}" unless diff.strip.empty?
+        message
       end
     end
   end
