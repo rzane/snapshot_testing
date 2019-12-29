@@ -29,14 +29,27 @@ module SnapshotTesting
         @expected == @actual
       end
 
-      description { "match snapshot #{@expected.inspect}"}
+      diffable
+      description { "match snapshot #{expected_formatted}"}
 
       failure_message do
-        diff = ::RSpec::Expectations.differ.diff(@actual, @expected)
+        "\nexpected: #{expected_formatted}\n     got: #{actual_formatted}\n"
+      end
 
-        message = "\nexpected: #{@expected.inspect}\n     got: #{@actual.inspect}\n"
-        message = "#{message}\nDiff: #{diff}" unless diff.strip.empty?
-        message
+      def expected
+        @expected
+      end
+
+      def expected_formatted
+        ::RSpec::Support::ObjectFormatter.format(expected)
+      end
+
+      def actual
+        @actual
+      end
+
+      def actual_formatted
+        ::RSpec::Support::ObjectFormatter.format(actual)
       end
     end
   end
