@@ -9,6 +9,7 @@ module SnapshotTesting
       @visited = []
       @added = 0
       @updated = 0
+      @removed = 0
     end
 
     def snapshot_path
@@ -60,15 +61,13 @@ module SnapshotTesting
     end
 
     def commit
-      removed = snapshots.keys - visited
-      removed = removed.grep(/^#{name}\s\d+$/)
-      removed.each { |key| snapshots.delete(key) }
+      prune_snapshots if update?
+      write_snapshots if write?
 
-      write_snapshots(snapshots) if write?
       log(added, :written) unless added.zero?
       log(updated, :updated) unless updated.zero?
-      log(removed.length, :removed) if update? && !removed.empty?
-      log(removed.length, :obsolete) if !update? && !removed.empty?
+      log(removed, :removed) unless removed.zero?
+      log(obsolete, :obsolete) unless obsolete.zero?
     end
 
     protected
@@ -78,6 +77,9 @@ module SnapshotTesting
 
     # the number of updated snapshots
     attr_accessor :updated
+
+    # the number of removed snapshots
+    attr_accessor :removed
 
     # all snapshots that have been compared
     attr_reader :visited
@@ -97,7 +99,28 @@ module SnapshotTesting
 
     # should we write to the filesystem?
     def write?
-      update? || !added.zero?
+      return true unless added.zero?
+      return false unless update?
+      !(updated + removed).zero?
+    end
+
+    # remove stale snapshots
+    def prune_snapshots
+      stale = snapshots.keys - visited
+      stale = stale.grep(/^#{name}\s\d+$/)
+      stale.each { |key| snapshots.delete(key) }
+      self.removed = stale.length
+    end
+
+    # the number of obsolete snapshots
+    def obsolete
+      (snapshots.keys - visited).grep(/^#{name}\s\d+$/).length
+    end
+
+    # write all snapshots to the filesystem
+    def write_snapshots
+      FileUtils.mkdir_p(snapshots_path)
+      File.write(snapshot_path, Snapshot.dump(snapshots))
     end
 
     def snapshots_path
@@ -116,11 +139,6 @@ module SnapshotTesting
     def write(name, data)
       FileUtils.mkdir_p(snapshots_path)
       File.write(File.join(snapshots_path, name), data)
-    end
-
-    def write_snapshots(snapshots)
-      FileUtils.mkdir_p(snapshots_path)
-      File.write(snapshot_path, Snapshot.dump(snapshots))
     end
   end
 end

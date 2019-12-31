@@ -96,10 +96,8 @@ RSpec.describe SnapshotTesting::Recorder do
       end
 
       it "writes snapshots" do
-        expect(recorder).to have_received(:write_snapshots).with(
-          "example 1" => "hello",
-          "example 2" => "goodbye"
-        )
+        expect(recorder).to have_received(:write_snapshots)
+        expect(snapshots).to eq("example 1" => "hello", "example 2" => "goodbye")
       end
 
       it "warns about written snapshots" do
@@ -116,10 +114,8 @@ RSpec.describe SnapshotTesting::Recorder do
       end
 
       it "writes snapshots" do
-        expect(recorder).to have_received(:write_snapshots).with(
-          "example 1" => "hello",
-          "example 2" => "goodbye"
-        )
+        expect(recorder).to have_received(:write_snapshots)
+        expect(snapshots).to eq("example 1" => "hello", "example 2" => "goodbye")
       end
 
       it "warns about updated snapshots" do
@@ -144,7 +140,8 @@ RSpec.describe SnapshotTesting::Recorder do
 
       context "when updating", :update do
         it "writes snapshots" do
-          expect(recorder).to have_received(:write_snapshots).with("example 1" => "hello")
+          expect(recorder).to have_received(:write_snapshots)
+          expect(snapshots).to eq("example 1" => "hello")
         end
 
         it "warns about removed snapshots" do
@@ -152,6 +149,10 @@ RSpec.describe SnapshotTesting::Recorder do
         end
       end
     end
+  end
+
+  def snapshots
+    recorder.instance_variable_get(:@snapshots)
   end
 
   def record_snapshots(snapshots)
