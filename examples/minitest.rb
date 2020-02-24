@@ -13,6 +13,10 @@ class ExampleTest < Minitest::Test
   def test_named_snapshot
     assert_snapshot "named.minitest.test.txt", "named"
   end
+
+  define_method "test_escapes_regex_[]" do
+    assert_snapshot "hello"
+  end
 end
 
 class ExampleSpec < Minitest::Spec
@@ -25,5 +29,9 @@ class ExampleSpec < Minitest::Spec
 
   it "takes a named snapshot" do
     _("named").must_match_snapshot "named.minitest.spec.txt"
+  end
+
+  it "escapes regex []" do
+    _("hello").must_match_snapshot
   end
 end

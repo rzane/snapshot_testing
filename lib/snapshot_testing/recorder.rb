@@ -92,6 +92,11 @@ module SnapshotTesting
     # the file location of the current test
     attr_reader :path
 
+    # a Regexp that will match a snapshot name
+    def name_pattern
+      /^#{Regexp.escape(name)}\s\d+$/
+    end
+
     # should we update failing snapshots?
     def update?
       @update
@@ -107,14 +112,14 @@ module SnapshotTesting
     # remove stale snapshots
     def prune_snapshots
       stale = snapshots.keys - visited
-      stale = stale.grep(/^#{name}\s\d+$/)
+      stale = stale.grep(name_pattern)
       stale.each { |key| snapshots.delete(key) }
       self.removed = stale.length
     end
 
     # the number of obsolete snapshots
     def obsolete
-      (snapshots.keys - visited).grep(/^#{name}\s\d+$/).length
+      (snapshots.keys - visited).grep(name_pattern).length
     end
 
     # write all snapshots to the filesystem

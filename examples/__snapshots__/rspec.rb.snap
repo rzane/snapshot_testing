@@ -5,3 +5,7 @@ SNAP
 snapshots["takes a snapshot 2"] = <<-SNAP
 goodbye
 SNAP
+
+snapshots["escapes regex [] 1"] = <<-SNAP
+hello
+SNAP

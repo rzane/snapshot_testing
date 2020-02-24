@@ -13,4 +13,8 @@ class ExampleTest < Test::Unit::TestCase
   def test_named_snapshot
     assert_snapshot "named.unit.txt", "named"
   end
+
+  define_method "test_escapes_regex_[]" do
+    assert_snapshot "hello"
+  end
 end

@@ -21,4 +21,8 @@ RSpec.describe "Example" do
 
     expect(message).to match_snapshot("named.rspec.txt")
   end
+
+  it "escapes regex []" do
+    expect("hello").to match_snapshot
+  end
 end
