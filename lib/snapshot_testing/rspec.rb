@@ -7,7 +7,7 @@ module SnapshotTesting
     def self.included(base)
       base.let :__snapshot_recorder__ do |example|
         SnapshotTesting::Recorder.new(
-          name: example.description,
+          name: example.description.try(:parameterize),
           path: example.metadata[:absolute_file_path]
         )
       end
