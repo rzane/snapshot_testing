@@ -4,6 +4,7 @@ require "snapshot_testing/rspec"
 
 RSpec.configure do |config|
   config.include SnapshotTesting::RSpec
+  config.color = false
 end
 
 RSpec.describe "Example" do

@@ -3,19 +3,29 @@ require "rspec/core/rake_task"
 
 RSpec::Core::RakeTask.new(:spec)
 
-def info(message)
-  puts "\033[1m#{message}\033[0m"
+module Color
+  def self.bold(msg); "\e[1m#{msg}\e[22m" end
+  def self.pink(msg); "\e[35m#{msg}\e[0m" end
+  def self.cyan(msg); "\e[36m#{msg}\e[0m" end
 end
 
 task :examples do
-  info "==>> Running RSpec..."
-  ruby "examples/rspec.rb -f progress"
+  suites = [
+    ["RSpec", "examples/rspec.rb -f progress --no-color"],
+    ["Minitest", "examples/minitest.rb"],
+    ["TestUnit", "examples/test_unit.rb --no-use-color"]
+  ]
 
-  info "\n\n==>> Running Minitest..."
-  ruby "examples/minitest.rb"
-
-  info "\n\n==>> Running TestUnit..."
-  ruby "examples/test_unit.rb"
+  rm_rf "examples/__snapshots__/"
+  suites.each do |name, test_file|
+    puts Color.bold("==== #{name} ==============================")
+    puts Color.cyan("==>> Running #{name} for the first time...")
+    ruby test_file
+    puts "\n\n"
+    puts Color.pink("==>> Running #{name} against saved snapshots...")
+    ruby test_file
+    puts "\n\n"
+  end
 end
 
 task :default => :spec
